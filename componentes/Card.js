@@ -21,9 +21,8 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 3,
-        
     },
-    cardTexto: {
+    cardText: {
         fontSize: 16,
         color: '#333'
     }
