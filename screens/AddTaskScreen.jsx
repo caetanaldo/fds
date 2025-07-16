@@ -3,11 +3,13 @@ import { View, Text, Alert, StyleSheet } from 'react-native';
 import CustomButton from '../componentes/CustomButton';
 import CustomInput from '../componentes/CustomInput';
 import axios from 'axios';
+import { useTasks } from '../componentes/TaskContext';
 
 export default function AddTaskScreen({ navigation, route }) {
-  const { addTask } = route.params;
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const task = route.params?.task;
+  const { addTask, deleteTask } = useTasks();
+  const [title, setTitle] = useState(task?.title || '');
+  const [description, setDescription] = useState(task?.description || '');
 
   const handleAddTask = async () => {
     if (title.trim()) {
@@ -16,6 +18,9 @@ export default function AddTaskScreen({ navigation, route }) {
           title,
           completed: false,
         });
+        if (task) {
+          deleteTask(task.id);
+        }
         addTask({ title, description, id: response.data.id.toString() });
         navigation.goBack();
       } catch (err) {

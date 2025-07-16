@@ -3,31 +3,14 @@ import { useState } from 'react';
 import TaskCard from '../componentes/TaskCard';
 import CustomButton from '../componentes/CustomButton';
 import CustomModal from '../componentes/CustomModal';
+import { useTasks } from '../componentes/TaskContext';
 
 export default function HomeScreen({ navigation }) {
-    const [localTasks, setLocalTasks] = useState([]);
+    // const [localTasks, setLocalTasks] = useState([]);
+    const { localTasks, toggleTaskCompletion, deleteTask, toggleTheme, getCompletedCount, clearTasks } = useTasks();
     const [filter, setFilter] = useState('all');
     const [modalVisible, setModalVisible] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
-
-    const addTask = ({ title, description }) => {
-        setLocalTasks(prev => [
-            ...prev,
-            { id: Date.now().toString(), title, description: description || '', completed: false }
-        ]);
-    };
-
-    const toggleTaskCompletion = (id) => {
-        setLocalTasks(prev =>
-            prev.map(task => task.id === id ? { ...task, completed: !task.completed } : task)
-        );
-    };
-
-    const deleteTask = () => {
-        setLocalTasks(prev => prev.filter(task => task.id !== taskToDelete));
-        setModalVisible(false);
-        setTaskToDelete(null);
-    };
 
     const filteredTasks = localTasks.filter(task => {
         if (filter === 'pending') return !task.completed;
@@ -52,11 +35,18 @@ export default function HomeScreen({ navigation }) {
         </>
     );
 
+    const { theme } = useTasks();
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, theme === 'dark' && styles.darkContainer]}>
+            <CustomButton
+                title={theme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}
+                onPress={toggleTheme}
+                color={theme === 'dark' ? '#007bff' : '#007bff'}
+            />
             <Text style={styles.title}>Minhas Tarefas</Text>
             <Text style={styles.counterText}>
-                Tarefas: {localTasks.length} | Concluídas: {localTasks.filter(task => task.completed).length}
+                Tarefas: {filteredTasks.length} | Concluídas: {getCompletedCount()}
             </Text>
             <View style={styles.filterContainer}>
                 <CustomButton
@@ -89,17 +79,35 @@ export default function HomeScreen({ navigation }) {
                     ItemSeparatorComponent={() => <View style={styles.separator} />}
                 />
             )}
-
             <CustomButton
                 title='Adicionar Tarefa'
-                onPress={() => navigation.navigate('AddTask', { addTask })}
+                onPress={() => navigation.navigate('AddTask')}
                 color='#28a745'
             />
             <CustomModal
                 visible={modalVisible}
                 title="Confirmar Exclusão"
                 message="Tem certeza que deseja excluir essa tarefa?"
-                onConfirm={deleteTask}
+                onConfirm={() => {
+                    deleteTask(taskToDelete);
+                    setModalVisible(false);
+                    setTaskToDelete(null);
+                }}
+                onClose={() => setModalVisible(false)}
+            />
+            <CustomButton
+                title='Limpar Tarefas'
+                onPress={() => setModalVisible(true)}
+                color='#dc3545'
+            />
+            <CustomModal
+                visible={modalVisible}
+                title="Limpar Tarefas"
+                message="Tem certeza que deseja excluir todas as tarefas locais?"
+                onConfirm={() => {
+                    clearTasks();
+                    setModalVisible(false);
+                }}
                 onClose={() => setModalVisible(false)}
             />
         </View>
@@ -107,12 +115,31 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f5f5', padding: 20 },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#333', textAlign: 'center' },
-    counterText: { fontSize: 16, color: '#333', marginBottom: 20, textAlign: 'center' },
-    emptyText: { fontSize: 16, color: '#666', textAlign: 'center', marginTop: 20 },
-    list: { flex: 1 },
-    separator: { height: 1, backgroundColor: '#ddd', marginVertical: 5 },
-    filterContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
-    sourceText: { fontSize: 12, color: '#888', marginBottom: 4 },
+    container: {
+        flex: 1, backgroundColor: '#f5f5f5', padding: 20
+    },
+    title: {
+        fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#333', textAlign: 'center'
+    },
+    counterText: {
+        fontSize: 16, color: '#333', marginBottom: 20, textAlign: 'center'
+    },
+    emptyText: {
+        fontSize: 16, color: '#666', textAlign: 'center', marginTop: 20
+    },
+    list: {
+        flex: 1
+    },
+    separator: {
+        height: 1, backgroundColor: '#ddd', marginVertical: 5
+    },
+    filterContainer: {
+        flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20
+    },
+    sourceText: {
+        fontSize: 12, color: '#888', marginBottom: 4
+    },
+    darkContainer: {
+        backgroundColor: '#333'
+    },
 });

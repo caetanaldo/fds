@@ -1,4 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import CustomButton from '../componentes/CustomButton';
 
 export default function DetailsScreen({ navigation, route }) {
   const { task } = route.params || {};
@@ -23,6 +24,11 @@ export default function DetailsScreen({ navigation, route }) {
       >
         <Text style={styles.buttonText}>Voltar</Text>
       </TouchableOpacity>
+      <CustomButton
+        title="Editar Tarefa"
+        onPress={() => navigation.navigate('AddTask', { task })}
+        color='#007bff'
+      />
     </View>
   );
 }
