@@ -1,10 +1,20 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TaskContext = createContext();
 
 export function TaskProvider({ children }) {
   const [localTasks, setLocalTasks] = useState([]);
   const [theme, setTheme] = useState('light');
+
+  const clearTasks = async () => {
+    try {
+      await AsyncStorage.removeItem('@TaskApp:tasks');
+      setLocalTasks([]);
+    } catch (err) {
+      console.error('Erro ao limpar as tarefas:', err);
+    }
+  }
 
   const toggleTheme = () => {
     setTheme(theme  === 'light' ? 'dark' : 'light');
@@ -36,9 +46,39 @@ export function TaskProvider({ children }) {
     setLocalTasks((prev) => prev.filter((task) => task.id !== id));
   };
 
-  const clearTasks = () => {
-    setLocalTasks([]);
-  };
+  useEffect (() => {
+    const loadTasks = async () => {
+      try {
+        const savedTasks = await AsyncStorage.getItem('@TaskApp:tasks');
+        if (savedTasks) {
+          const parsedTasks = JSON.parse(savedTasks);
+          if (Array.isArray(parsedTasks) && parsedTasks.every(task => task.id && task.title)) {
+            setLocalTasks(parsedTasks);
+          }
+          else {
+            console.warn('Dados inválidos, inicializando com array vazio')
+            setLocalTasks([]);
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao carregar as tarefas:', err);
+      }
+    }
+
+    loadTasks();
+  } , [])
+
+  useEffect(() => {
+    const saveTasks = async () => {
+      try {
+        await AsyncStorage.setItem('@TaskApp:tasks', JSON.stringify(localTasks));
+      } catch (err) {
+        console.error('Erro ao salvar as tarefas:', err);
+      }
+    }
+
+    saveTasks();
+  } , [localTasks])
 
   return (
     <TaskContext.Provider value={{ localTasks, addTask, toggleTaskCompletion, deleteTask, theme, toggleTheme, getCompletedCount, clearTasks }}>

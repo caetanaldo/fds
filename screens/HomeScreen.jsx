@@ -11,6 +11,8 @@ export default function HomeScreen({ navigation }) {
     const [filter, setFilter] = useState('all');
     const [modalVisible, setModalVisible] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [addTask, setAddTask] = useState(false);
 
     const filteredTasks = localTasks.filter(task => {
         if (filter === 'pending') return !task.completed;
@@ -68,6 +70,7 @@ export default function HomeScreen({ navigation }) {
                     textStyle={{ color: filter === 'completed' ? '#fff' : '#333' }}
                 />
             </View>
+            {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
             {localTasks.length === 0 ? (
                 <Text style={styles.emptyText}>Nenhuma tarefa adicionada</Text>
             ) : (
@@ -81,19 +84,32 @@ export default function HomeScreen({ navigation }) {
             )}
             <CustomButton
                 title='Adicionar Tarefa'
-                onPress={() => navigation.navigate('AddTask')}
+                onPress={() => setAddTask(true)}
                 color='#28a745'
             />
             <CustomModal
+                visible={addTask}
+                onClose={() => setAddTask(false)}
+                onPress={() => navigation.navigate('AddTask')}
+                title="Adicionar Tarefa"
+                onConfirm={() => {
+                    setAddTask(false);
+                    setSuccessMessage('Tarefa adicionada com sucesso!');
+                    setTimeout(() => setSuccessMessage(''), 2000);
+                }}
+            />
+            <CustomModal
                 visible={modalVisible}
+                onClose={() => setModalVisible(false)}
                 title="Confirmar Exclusão"
                 message="Tem certeza que deseja excluir essa tarefa?"
                 onConfirm={() => {
                     deleteTask(taskToDelete);
                     setModalVisible(false);
                     setTaskToDelete(null);
+                    setSuccessMessage('Tarefa excluida com sucesso!');
+                    setTimeout(() => setSuccessMessage(''), 2000);
                 }}
-                onClose={() => setModalVisible(false)}
             />
             <CustomButton
                 title='Limpar Tarefas'
@@ -142,4 +158,10 @@ const styles = StyleSheet.create({
     darkContainer: {
         backgroundColor: '#333'
     },
+    successText: {
+        fontSize: 16,
+        color: '#28a745',
+        textAlign: 'center',
+        marginBottom: 10,
+    }
 });
